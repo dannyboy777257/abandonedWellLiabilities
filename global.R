@@ -4,6 +4,7 @@ library(purrr)
 library(sf)
 library(utils)
 
+# Group: Aditya, Daniel, Jamie, and Raina 
 # WellInfrastructure from Petrinex as csv
 # pool region from AER_order_system from shapefile page on aer
 # abandoned wells is the TT (not forest) file from shapefile aer page
