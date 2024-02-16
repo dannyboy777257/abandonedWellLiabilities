@@ -1,3 +1,4 @@
+library(bslib)
 library(gt)
 library(leaflet)
 library(plotly)
@@ -6,6 +7,7 @@ library(shiny)
 ch <- 400
 
 shiny::fluidPage(
+  theme = bslib::bs_theme(bootswatch = "lux"),
   shiny::titlePanel("Abandoned Wells Liabilities"),
   shiny::br(),
   shiny::sidebarLayout(
