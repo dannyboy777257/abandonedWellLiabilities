@@ -1,10 +1,11 @@
+library(dplyr)
 library(leaflet)
 library(purrr)
-library(RTL)
-library(tidyverse)
+library(sf)
+library(utils)
 
 r <- shiny::reactiveValues()
-wd <- "C:/Users/Raina/R/abandonedWellLiabilities/data" #"/srv/shiny-server/wells/data/"
+wd <- "/srv/shiny-server/wells/data"
 
 # WellInfrastructure from Petrinex as csv
 # pool region from AER_order_system from shapefile page on aer
@@ -22,7 +23,6 @@ out <- sf::read_sf(dsn = dsn, layer = layer, quiet = TRUE) %>%
 # If pipe used - will not transform data (will provide warning)
 out <- sf::st_transform(out, crs = 4326)
 
-# read in vector of classes speeds up reading dramatically
 additionalInfo <- readRDS(paste0(wd, "/well-infrastructure-AB.rds"))
 
 wellsWithInfo <- dplyr::left_join(out, additionalInfo, by = c("Licence" = "LicenceNumber")) %>% 
@@ -31,13 +31,13 @@ wellsWithInfo <- dplyr::left_join(out, additionalInfo, by = c("Licence" = "Licen
   dplyr::ungroup()
 
 # Read in in Pool Regions
-# fname2 <- utils::unzip(paste0(wd, "/poolRegions.zip"), list = TRUE)$Name
-# 
-# utils::unzip(paste0(wd, "/poolRegions.zip"), files = fname2, exdir = wd, overwrite = TRUE)
-# layer2 <- sub(".*/", "", sub(".shp.*", "", grep(".shp", fname2, value = TRUE)[1]))
-# dsn2 <- sub(paste0(layer2, ".*"), "", file.path(paste0(wd, "/poolRegions"), fname2)[1])
-# poolRegion <-  sf::read_sf(dsn = dsn2, layer = layer2, quiet = TRUE)
-# poolRegion <-  sf::st_transform(poolRegion, crs = 4326)
+fname2 <- utils::unzip(paste0(wd, "/poolRegions.zip"), list = TRUE)$Name
+
+utils::unzip(paste0(wd, "/poolRegions.zip"), files = fname2, exdir = wd, overwrite = TRUE)
+layer2 <- sub(".*/", "", sub(".shp.*", "", grep(".shp", fname2, value = TRUE)[1]))
+dsn2 <- sub(paste0(layer2, ".*"), "", file.path(wd, fname2)[1])
+poolRegion <- sf::read_sf(dsn = dsn2, layer = layer2, quiet = TRUE)
+poolRegion <- sf::st_transform(poolRegion, crs = 4326)
 
 # Read in Abandonment polygons
 fname3 <- utils::unzip(paste0(wd, "/abandonedWells.zip"), list = TRUE)$Name
@@ -45,8 +45,8 @@ fname3 <- utils::unzip(paste0(wd, "/abandonedWells.zip"), list = TRUE)$Name
 utils::unzip(paste0(wd, "/abandonedWells.zip"), files = fname3, exdir = wd, overwrite = TRUE)
 layer3 <- sub(".*/", "", sub(".shp.*", "", grep(".shp", fname3, value = TRUE)[1]))
 dsn3 <- sub(paste0(layer3, ".*"), "", file.path(wd, fname3)[1])
-abandonmentArea <-  sf::read_sf(dsn = dsn3, layer = layer3, quiet = TRUE)
-abandonmentArea <-  sf::st_transform(abandonmentArea, crs = 4326)
+abandonmentArea <- sf::read_sf(dsn = dsn3, layer = layer3, quiet = TRUE)
+abandonmentArea <- sf::st_transform(abandonmentArea, crs = 4326)
 
 area <- sf::st_within(wellsWithInfo$geometry, abandonmentArea$geometry)
 
@@ -76,8 +76,8 @@ fname4 <- utils::unzip(paste0(wd, "/reclamation.zip"), list = TRUE)$Name
 utils::unzip(paste0(wd, "/reclamation.zip"), files = fname4, exdir = wd, overwrite = TRUE)
 layer4 <- sub(".*/", "", sub(".shp.*", "", grep(".shp", fname4, value = TRUE)[1]))
 dsn4 <- sub(paste0(layer4, ".*"), "", file.path(wd, fname4)[1])
-reclamationMap <-  sf::read_sf(dsn = dsn4, layer = layer4, quiet = TRUE)
-reclamationMap <-  sf::st_transform(reclamationMap, crs = 4326)
+reclamationMap <- sf::read_sf(dsn = dsn4, layer = layer4, quiet = TRUE)
+reclamationMap <- sf::st_transform(reclamationMap, crs = 4326)
 
 recArea <- sf::st_within(wellsWithInfo$geometry, reclamationMap$geometry)
 
