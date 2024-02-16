@@ -4,12 +4,12 @@ library(purrr)
 library(sf)
 library(utils)
 
-r <- shiny::reactiveValues()
-wd <- "/srv/shiny-server/wells/data"
-
 # WellInfrastructure from Petrinex as csv
 # pool region from AER_order_system from shapefile page on aer
 # abandoned wells is the TT (not forest) file from shapefile aer page
+
+r <- shiny::reactiveValues()
+wd <- "/srv/shiny-server/wells/data"
 
 fname <- utils::unzip(paste0(wd, "/ABNDWells_SHPTT.zip"), list = TRUE)$Name
 
