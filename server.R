@@ -21,7 +21,7 @@ function(input, output, session) {
   
   output$map <- leaflet::renderLeaflet({
     shiny::req(input$company, input$fluid, input$depth)
-    color_palette <- leaflet::colorFactor(palette = "Set1", domain = poolRegion$FIELD_NAME)
+    #color_palette <- leaflet::colorFactor(palette = "Set1", domain = poolRegion$FIELD_NAME)
     
     leaflet::leaflet() %>% 
       leaflet::addTiles() %>% 

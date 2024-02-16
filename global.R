@@ -4,7 +4,7 @@ library(RTL)
 library(tidyverse)
 
 r <- shiny::reactiveValues()
-wd <- "C:/Users/Raina/R/wells/wellsProject/data" #"/srv/shiny-server/wells/data/"
+wd <- "C:/Users/Raina/R/abandonedWellLiabilities/data" #"/srv/shiny-server/wells/data/"
 
 # WellInfrastructure from Petrinex as csv
 # pool region from AER_order_system from shapefile page on aer
@@ -22,18 +22,8 @@ out <- sf::read_sf(dsn = dsn, layer = layer, quiet = TRUE) %>%
 # If pipe used - will not transform data (will provide warning)
 out <- sf::st_transform(out, crs = 4326)
 
-# used to speed up reading in CSV
-# get names from csv and replace columns wanted with class
-getNames <- names(utils::read.csv(file = paste0(wd, "/Well Infrastructure-AB.CSV"), nrow = 1))
-colsWanted <- base::gsub("^((?!(LicenceNumber|FieldName|FinalTotalDepth)).)*$", 
-                         replacement = "NULL", x = getNames, perl = TRUE) %>% 
-  stringr::str_replace_all(., c("LicenceNumber" = "character", 
-                                "FieldName" = "character", 
-                                "FinalTotalDepth" = "numeric"))
-
 # read in vector of classes speeds up reading dramatically
-additionalInfo <- utils::read.csv(file = paste0(wd, "/Well Infrastructure-AB.CSV"), colClasses = colsWanted) %>% 
-  dplyr::distinct()
+additionalInfo <- readRDS(paste0(wd, "/well-infrastructure-AB.rds"))
 
 wellsWithInfo <- dplyr::left_join(out, additionalInfo, by = c("Licence" = "LicenceNumber")) %>% 
   dplyr::group_by(Licence) %>% 

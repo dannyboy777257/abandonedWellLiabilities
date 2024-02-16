@@ -26,9 +26,8 @@ shiny::fluidPage(
         ), 
         shiny::tabPanel("Map", 
                         # Pull unique fields + filter poolRegion 
-                        shiny::mainPanel(
-                          leaflet::leafletOutput("map")
-                        )), 
+                        leaflet::leafletOutput("map", height = "90vh") 
+                        ),
         shiny::tabPanel("Cost Tables", 
                         shiny::sidebarPanel(
                           #Select Inputs
