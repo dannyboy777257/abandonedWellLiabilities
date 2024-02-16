@@ -2,7 +2,7 @@ FROM rocker/shiny-verse:latest
 RUN apt-get update && apt-get install -y git 
 
 RUN git clone https://github.com/dannyboy777257/abandonedWellLiabilities.git /srv/shiny-server/wells
-RUN RScript packages.R /srv/shiny-server/wells/packages.R
+RUN Rscript packages.R /srv/shiny-server/wells/packages.R
 
 EXPOSE 3838
 
