@@ -5,11 +5,11 @@ library(tidyverse)
 
 function(input, output, session) {
   shiny::observeEvent(input$update, {
-    shiny::req(input$company, input$fluid, input$depth, r$wellsWithInfo)
-    r$wellsWithInfo <- r$wellsWithInfo  %>% 
+    shiny::req(input$company, input$fluid, input$depth)
+    r$wellsWithInfo <- wellsWithInfo %>% 
       dplyr::filter(Licensee == input$company, 
                     Fluid %in% input$fluid, 
-                    FinalTotalDepth <= input$depth)
+                    FinalTotalDepth %in% input$depth)
     
     # fieldName <- unique(r$wellsWithInfo$FieldName)
     # 
@@ -19,8 +19,19 @@ function(input, output, session) {
     # Filter companies based on user input for the wellsWithInfo
   })
   
+  shiny::observeEvent(input$company, {
+    browser()
+    shiny::updateSelectInput(session, "fluid",
+                                choices = sort(unique(wellsWithInfo$Fluid[which(wellsWithInfo$Licensee == input$company)])))
+  })
+  
+  shiny::observeEvent(list(input$company, input$fluid), {
+    shiny::updateSelectInput(session, "depth", # Change to ranges 
+                                choices = sort(unique(wellsWithInfo$FinalTotalDepth[which(wellsWithInfo$Fluid %in% input$fluid)])))
+  })
+  
   output$map <- leaflet::renderLeaflet({
-    shiny::req(input$company, input$fluid, input$depth)
+    shiny::req(r$wellsWithInfo)
     #color_palette <- leaflet::colorFactor(palette = "Set1", domain = poolRegion$FIELD_NAME)
     
     leaflet::leaflet() %>% 
@@ -46,21 +57,51 @@ function(input, output, session) {
                            fillOpacity = 0.08)
   })
   
-  output$industryComp <- plotly::renderPlotly({
+  shiny::observe({
+    shiny::req(r$wellsWithInfo)
+    r$data <- r$wellsWithInfo %>% 
+      dplyr::tibble() %>% 
+      dplyr::select(Licensee, FinalTotalDepth, reclamationArea, Fluid, grep("_Cost", colnames(.), value = TRUE)) %>% 
+      dplyr::mutate(maxCost = Empty_perforated_Cost + Tubing_and_rods_Cost + Groundwater_Protection_Cost + Vent_Flow_Repair_Cost + Gas_Migration_Cost)
     
+  })
+  
+  output$industryComp <- plotly::renderPlotly({
+    shiny::req(r$data)
+    r$data %>% 
+      dplyr::select(-reclamationArea, -Fluid, -FinalTotalDepth) %>% 
+      tidyr::pivot_longer(cols = -Licensee, names_to = "category", values_to = "costs") %>% 
+      dplyr::group_by(category) %>%
+      dplyr::summarise(costs = sum(costs)) %>% 
+      plotly::plot_ly(x = ~category, y = ~costs, type = "bar", color = ~category) %>% 
+      plotly::layout(xaxis = list(title = "Cost Category"), yaxis = list(title = "Costs ($)"), 
+                     title = paste("Sum of Costs for", input$company))
   })
   
   output$fluidChart <- plotly::renderPlotly({
-    
+    shiny::req(r$data)
+    r$data %>% 
+      dplyr::select(-reclamationArea, -FinalTotalDepth, -grep("_Cost", colnames(.), value = TRUE)) %>% 
+      dplyr::group_by(Fluid) %>%
+      dplyr::summarise(maxCosts = sum(maxCost)) %>% 
+      plotly::plot_ly(x = ~Fluid, y = ~maxCosts, type = "bar", color = ~Fluid) %>% 
+      plotly::layout(xaxis = list(title = "Fluid"), yaxis = list(title = "Maximum Costs ($)"), 
+                     title = paste("Max Costs for", input$company), barmode = "stacked")
   })
   
-  output$depthCost <- plotly::renderPlotly({
-    
+  output$depth <- plotly::renderPlotly({
+    shiny::req(r$data)
+
+    r$data %>% 
+      dplyr::select(FinalTotalDepth, maxCost) %>% 
+      dplyr::group_by(FinalTotalDepth) %>% 
+      dplyr::arrange(FinalTotalDepth) %>% 
+      plotly::plot_ly(x = ~FinalTotalDepth, y = ~maxCost, type = "scatter", mode = "markers", 
+                      marker = list(color = ~maxCost)) %>% 
+      plotly::layout(xaxis = list(title = "Fluid"), yaxis = list(title = "Maximum Costs ($)"), 
+                     title = paste("Max Costs for", input$company))
   })
   
-  # fluid type but well depths and price 
-  
-  # Creat dataCost and recCost GT
   output$links <- shiny::renderUI({
     dir6 <- shiny::a("Directive 006", href = "https://static.aer.ca/prd/documents/directives/Directive006.pdf")
     dir11 <- shiny::a("Directive 011", href = "https://static.aer.ca/prd/documents/directives/Directive011_March2015.pdf")

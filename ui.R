@@ -1,4 +1,7 @@
 library(shiny)
+library(gt)
+
+ch <- 400
 
 shiny::fluidPage(
   shiny::titlePanel("Abandoned Wells Liabilities"),
@@ -7,21 +10,24 @@ shiny::fluidPage(
     fluid = TRUE, 
     shiny::sidebarPanel(
       width = 2,
-      shiny::selectizeInput("company", "Select Company: ",
+      shiny::selectInput("company", "Select Company: ",
                             choices = sort(unique(wellsWithInfo$Licensee))), 
-      shiny::selectizeInput("fluid", "Select Fluid: ",
-                            choices = sort(unique(wellsWithInfo$Fluid))), 
-      shiny::selectizeInput("depth", "Select Depth: ", # Change to ranges 
-                            choices = sort(unique(wellsWithInfo$FinalTotalDepth))), 
+      shiny::selectInput("fluid", "Select Fluid: ",
+                            choices = NULL, multiple = TRUE, selectize = FALSE), 
+      shiny::selectInput("depth", "Select Depth: ", # Change to ranges 
+                            choices = NULL, multiple = TRUE, selectize = FALSE), 
       shiny::actionButton("update", "Update Data")),
     shiny::mainPanel(
       shiny::tabsetPanel(
         shiny::tabPanel("Analysis", 
-                        shiny::sidebarPanel(
-                          #Select Inputs
-                        ),
                         shiny::mainPanel(
-                          #
+                          plotly::plotlyOutput("industryComp", height = ch), 
+                          shiny::br(), 
+                          shiny::br(), 
+                          plotly::plotlyOutput("fluidChart", height = ch), 
+                          shiny::br(), 
+                          shiny::br(), 
+                          plotly::plotlyOutput("depth", height = ch), 
                         )
         ), 
         shiny::tabPanel("Map", 
@@ -36,7 +42,7 @@ shiny::fluidPage(
                           shiny::fluidRow(
                             shiny::uiOutput("links"),
                             gt::gt_output("cost"), 
-                            gt::gt_output("recCost")
+                            gt::gt_output("depth")
                           )
                           
                           # Create GT from dataCost and recCost 

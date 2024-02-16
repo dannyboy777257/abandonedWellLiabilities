@@ -56,7 +56,7 @@ area <- dplyr::tibble(area) %>%
 
 wellsWithInfo <- wellsWithInfo %>% 
   cbind(area) %>% 
-  dplyr::mutate(Location = dplyr::case_when(area == 1 ~ "Lloydminister", 
+  dplyr::mutate(Location = dplyr::case_when(area == 1 ~ "Lloydminster", 
                                             area == 2 ~ "Medicine Hat",
                                             area == 3 ~ "High Level",
                                             area == 4 ~ "Athabasca/Peace River",
@@ -69,7 +69,7 @@ wellsWithInfo <- wellsWithInfo %>%
                                        FinalTotalDepth <= 2999 ~ "d", 
                                        TRUE ~ "e")) %>% 
   dplyr::filter(!is.na(Location))
-  
+
 # Read in Reclamation Costs
 fname4 <- utils::unzip(paste0(wd, "/reclamation.zip"), list = TRUE)$Name
 
@@ -100,13 +100,12 @@ wellsWithInfo <- wellsWithInfo %>%
 # Read in Cost Tables
 recCost <- readRDS(paste0(wd, "/reclamationCost.rds"))
 dataCost <- readRDS(paste0(wd, "/dataCost.rds")) %>% 
-  dplyr::mutate(key = dplyr::case_when(Depth <= 1199 ~ "a", 
-                                       Depth <= 1999 ~ "b", 
-                                       Depth <= 2499 ~ "c", 
-                                       Depth <= 2999 ~ "d", 
+  dplyr::mutate(key = dplyr::case_when(Depth == 1199 ~ "a", 
+                                       Depth == 1999 ~ "b", 
+                                       Depth == 2499 ~ "c", 
+                                       Depth == 2999 ~ "d", 
                                        TRUE ~ "e")) 
 
-r$wellsWithInfo <- wellsWithInfo %>% 
+wellsWithInfo <- wellsWithInfo %>% 
   dplyr::left_join(recCost, by = "reclamationArea", relationship = "many-to-many") %>% 
-  dplyr::left_join(dataCost, by = c("Location", "key"), relationship = "many-to-many") %>% 
-  dplyr::select(-key)
+  dplyr::left_join(dataCost, by = c("Location", "key"), relationship = "many-to-many")
